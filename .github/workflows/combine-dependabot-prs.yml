@@ -1,0 +1,43 @@
+# Combines multiple passing Dependabot pull requests into one pull request.
+# This makes it possible to review, test, and merge dependency updates together.
+name: Combine Dependabot PRs
+
+on:
+  # Allows other workflows and repositories to call this reusable workflow.
+  workflow_call:
+
+  # Also allows this workflow to be run manually from the Actions tab
+  # when it is stored directly within a repository.
+  workflow_dispatch:
+
+# Minimum permissions required by github/combine-prs.
+permissions:
+  # Required to create the branch containing the combined dependency updates.
+  contents: write
+
+  # Required to create and update the combined pull request.
+  pull-requests: write
+
+  # Required to verify that the individual Dependabot PRs are passing CI.
+  checks: read
+
+jobs:
+  combine-dependabot-prs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Find passing PRs created from Dependabot branches and combine their
+      # dependency updates into a single pull request.
+      - name: Combine passing Dependabot PRs
+        id: combine-dependabot-prs
+        uses: github/combine-prs@v5.2.0
+        with:
+          # Only consider PRs whose branches begin with "dependabot".
+          branch_prefix: dependabot
+
+          # Only combine Dependabot PRs whose CI checks are passing.
+          ci_required: true
+
+          # Apply this label to the new combined PR.
+          # This label does not control which Dependabot PRs are selected.
+          labels: combined-pr
